@@ -14,7 +14,7 @@ Run `cdk deploy` (Requires AWS Account is set up and cdk is configured. See: htt
 
 After deploying the CDK the following endpoints will be available. The url is the provided after a successful deploy
 
-```http request
+```
 GET {{url}}/creations/{{walletId}}
 Accept: application/json
 
