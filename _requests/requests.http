@@ -1,0 +1,19 @@
+GET {{url}}/creations/tz1VgpmwW66LCbskjudK54Zp96vKn2cHjpGN
+Accept: application/json
+
+###
+
+GET {{url}}/collections/tz1VgpmwW66LCbskjudK54Zp96vKn2cHjpGN
+Accept: application/json
+
+###
+
+GET {{url}}/swaps/tz1VgpmwW66LCbskjudK54Zp96vKn2cHjpGN
+Accept: application/json
+
+###
+
+GET {{url}}/objkts/50000
+Accept: application/json
+
+###
