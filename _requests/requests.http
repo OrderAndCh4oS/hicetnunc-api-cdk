@@ -13,7 +13,7 @@ Accept: application/json
 
 ###
 
-GET {{url}}/objkts/50000
+GET {{url}}/objkts/63087
 Accept: application/json
 
 ###
