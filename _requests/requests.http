@@ -1,19 +1,34 @@
 GET {{url}}/creations/tz1VgpmwW66LCbskjudK54Zp96vKn2cHjpGN
 Accept: application/json
+x-api-key: ZIMcGcGQ2s85G8ZTlwu3w5BvIJoowvt9aTlS9V96
 
 ###
 
 GET {{url}}/collections/tz1VgpmwW66LCbskjudK54Zp96vKn2cHjpGN
 Accept: application/json
+x-api-key: ZIMcGcGQ2s85G8ZTlwu3w5BvIJoowvt9aTlS9V96
 
 ###
 
 GET {{url}}/swaps/tz1VgpmwW66LCbskjudK54Zp96vKn2cHjpGN
 Accept: application/json
+x-api-key: ZIMcGcGQ2s85G8ZTlwu3w5BvIJoowvt9aTlS9V96
 
 ###
 
 GET {{url}}/objkts/63087
+Accept: application/json
+x-api-key: ZIMcGcGQ2s85G8ZTlwu3w5BvIJoowvt9aTlS9V96
+
+###
+
+GET {{url}}/collectors/63087
+Accept: application/json
+x-api-key: ZIMcGcGQ2s85G8ZTlwu3w5BvIJoowvt9aTlS9V96
+
+###
+
+GET https://api.better-call.dev/v1/contract/mainnet/KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton/tokens/holders?token_id=63087
 Accept: application/json
 
 ###

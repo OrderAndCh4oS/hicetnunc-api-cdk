@@ -9,7 +9,7 @@ const {
     ConseilSortDirection,
     TezosConseilClient,
     registerFetch,
-    registerLogger
+    registerLogger,
 } = conseiljs;
 const log = require('loglevel');
 const fetch = require('node-fetch');
@@ -102,7 +102,29 @@ const _block_levels = [
     1450216,
     1451043,
     1451899,
-    1453002
+    1453002,
+    1453966,
+    1454793,
+    1455805,
+    1456541,
+    1457428,
+    1458347,
+    1458941,
+    1459859,
+    1460427,
+    1461355,
+    1462195,
+    1463102,
+    1464234,
+    1465183,
+    1466108,
+    1467092,
+    1467727,
+    1468606,
+    1469295,
+    1470019,
+    1470756,
+    1471505
 ];
 
 const getObjktById = async(id, min_creation_level, max_creation_level) => {
@@ -140,7 +162,6 @@ const getObjktById = async(id, min_creation_level, max_creation_level) => {
                 [min_creation_level],
             );
         }
-
     }
 
     objectQuery = ConseilQueryBuilder.addOrdering(
