@@ -297,6 +297,10 @@ exports.handler = async(event) => {
         return {
             statusCode: 500,
             body: JSON.stringify({error: 'Unhandled error'}),
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Content-Type': 'application/json',
+            },
         };
     }
 };

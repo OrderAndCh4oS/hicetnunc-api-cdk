@@ -1,0 +1,4 @@
+GET https://api.tzkt.io/v1/accounts/tz1VgpmwW66LCbskjudK54Zp96vKn2cHjpGN/metadata
+Accept: application/json
+
+###

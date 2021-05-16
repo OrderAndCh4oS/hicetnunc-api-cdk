@@ -1,0 +1,11 @@
+
+
+GET https://api.better-call.dev/v1/contract/mainnet/KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton/tokens/holders?token_id=63087
+Accept: application/json
+
+###
+
+GET https://api.better-call.dev/v1/contract/mainnet/KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton/tokens?token_id=63087
+Accept: application/json
+
+###

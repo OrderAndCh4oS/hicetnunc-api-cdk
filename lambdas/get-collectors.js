@@ -6,11 +6,15 @@ async function getCollectors(objktId) {
         objktId,
     );
 
-    const collectors = response.data
+    const collectors = response.data;
+
+    if('tz1burnburnburnburnburnburnburjAYjjX' in collectors)
+        delete collectors.tz1burnburnburnburnburnburnburjAYjjX;
 
     const total = Object.values(collectors).reduce((acc, i) => acc + ~~Number(i), 0);
+    const available = collectors?.KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9 || 0;
 
-    return {total, collectors};
+    return {total, collectors, available};
 }
 
 exports.handler = async(event) => {
@@ -29,6 +33,10 @@ exports.handler = async(event) => {
         return {
             statusCode: 500,
             body: JSON.stringify({error: 'Unhandled error'}),
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Content-Type': 'application/json',
+            },
         };
     }
 };

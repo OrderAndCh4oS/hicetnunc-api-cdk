@@ -114,9 +114,9 @@ const getSwapsForAddress = async(address) => {
         {});
 };
 
-exports.handler = async (event) => {
+exports.handler = async(event) => {
     try {
-        console.log('address', event.pathParameters.address)
+        console.log('address', event.pathParameters.address);
         const swaps = await getSwapsForAddress(event.pathParameters.address);
         console.log('swaps', swaps);
         return {
@@ -124,15 +124,19 @@ exports.handler = async (event) => {
             body: JSON.stringify(swaps),
             headers: {
                 'Access-Control-Allow-Origin': '*',
-                'Content-Type': 'application/json'
-            }
-        }
+                'Content-Type': 'application/json',
+            },
+        };
     } catch(e) {
         console.log('Error', e);
         return {
             statusCode: 500,
-            body: JSON.stringify({error: 'Unhandled error'})
-        }
+            body: JSON.stringify({error: 'Unhandled error'}),
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Content-Type': 'application/json',
+            },
+        };
     }
-}
+};
 

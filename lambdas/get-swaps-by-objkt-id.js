@@ -1,13 +1,8 @@
 // https://cryptonomic.github.io/ConseilJS/#/?id=metadata-discovery-functions
 // https://github.com/hicetnunc2000/hicetnunc-api/blob/7a87b206d7714cc054fc3497bae68504e5f353d6/lib/conseil.js#L719
 
-const axios = require('axios');
 const conseiljs = require('conseiljs');
 const {
-    ConseilQueryBuilder,
-    ConseilOperator,
-    ConseilSortDirection,
-    TezosConseilClient,
     registerFetch,
     registerLogger,
 } = conseiljs;
@@ -39,9 +34,6 @@ const mainnet = {
     hDaoSwap: 'KT1Qm3urGqkRsWsovGzNb2R81c3dSfxpteHG',
     kolibriSwap: 'KT1K4EwTpbvYN9agJdjpyJm4ZZdhpUNKB3F6',
 };
-
-const getIpfsHash = async ipfsHash => (await axios.get(
-    'https://cloudflare-ipfs.com/ipfs/' + ipfsHash)).data;
 
 const _block_levels = [
     1365242,
@@ -127,95 +119,76 @@ const _block_levels = [
     1471505,
 ];
 
-const getObjktById = async(id, min_creation_level, max_creation_level) => {
-    let objectQuery = ConseilQueryBuilder.blankQuery();
-    objectQuery = ConseilQueryBuilder.addFields(
-        objectQuery,
+const getSwapsByObjktId = async(objectId) => {
+    const id_int = (typeof objectId == 'string') ? parseInt(objectId) : objectId;
+    const blockKey = Math.floor(id_int / 1000);
+    const min_creation_level = blockKey <= _block_levels.length
+        ? _block_levels[blockKey]
+        : _block_levels[_block_levels.length - 1];
+
+    let swapsQuery = conseiljs.ConseilQueryBuilder.blankQuery();
+    swapsQuery = conseiljs.ConseilQueryBuilder.addFields(
+        swapsQuery,
         'key',
         'value',
-        'block_level');
-    objectQuery = ConseilQueryBuilder.addPredicate(
-        objectQuery,
-        'big_map_id',
-        ConseilOperator.EQ,
-        [mainnet.nftMetadataMap],
     );
-    objectQuery = ConseilQueryBuilder.addPredicate(
-        objectQuery,
-        'key',
-        ConseilOperator.EQ,
-        [id],
+    swapsQuery = conseiljs.ConseilQueryBuilder.addPredicate(
+        swapsQuery,
+        'big_map_id',
+        conseiljs.ConseilOperator.EQ,
+        [mainnet.nftSwapMap],
+    );
+    swapsQuery = conseiljs.ConseilQueryBuilder.addPredicate(
+        swapsQuery,
+        'value',
+        conseiljs.ConseilOperator.LIKE,
+        [`) (Pair ${objectId} `],
     );
     if((typeof min_creation_level !== 'undefined') && min_creation_level !== null) {
-        if((typeof max_creation_level !== 'undefined') && max_creation_level !== null) {
-            objectQuery = ConseilQueryBuilder.addPredicate(
-                objectQuery,
-                'block_level',
-                ConseilOperator.BETWEEN,
-                [min_creation_level, max_creation_level],
-            );
-        } else {
-            objectQuery = ConseilQueryBuilder.addPredicate(
-                objectQuery,
-                'block_level',
-                ConseilOperator.GT,
-                [min_creation_level],
-            );
-        }
+        swapsQuery = conseiljs.ConseilQueryBuilder.addPredicate(
+            swapsQuery,
+            'block_level',
+            conseiljs.ConseilOperator.GT,
+            [min_creation_level],
+        );
     }
 
-    objectQuery = ConseilQueryBuilder.addOrdering(
-        objectQuery,
-        'block_level',
-        ConseilSortDirection.DESC,
-    );
+    swapsQuery = conseiljs.ConseilQueryBuilder.setLimit(swapsQuery, 1000); // NOTE, limited to 1000 swaps for a given object
 
-    objectQuery = ConseilQueryBuilder.setLimit(objectQuery, 1);
-
-    const objectResult = await TezosConseilClient.getTezosEntityData(
+    const swapsResult = await conseiljs.TezosConseilClient.getTezosEntityData(
         {url: conseilServer, apiKey: conseilApiKey, network: 'mainnet'},
         'mainnet',
         'big_map_contents',
-        objectQuery,
+        swapsQuery,
     );
 
-    const objectUrl = objectResult[0]['value']
-        .toString()
-        .replace(/.* 0x([0-9a-z]+) }$/, '$1');
-    const ipfsHash = Buffer.from(objectUrl, 'hex').toString().slice(7);
+    const swapStoragePattern = new RegExp(
+        `Pair [(]Pair 0x([0-9a-z]{44}) ([0-9]+)[)] [(]Pair ${objectId} ([0-9]+)[)]`,
+    );
 
-    return {id, ipfsHash};
-};
-
-async function getObjkt(id) {
-    const id_int = (typeof id == 'string') ? parseInt(id) : id;
-    const blockKey = Math.floor(id_int / 1000);
-    const block_start = blockKey <= _block_levels.length
-        ? _block_levels[blockKey]
-        : _block_levels[_block_levels.length - 1];
-    const block_end = blockKey + 1 <= _block_levels.length
-        ? _block_levels[blockKey + 1]
-        : null;
-    console.log('block len', _block_levels.length);
-    console.log('block_range', blockKey);
-    console.log('block_start', block_start);
-    console.log('block_end', block_end);
     try {
-        const objkt = await getObjktById(id, block_start, block_end);
-        const ipfsMetadata = await getIpfsHash(objkt.ipfsHash);
-        return {...objkt, ...ipfsMetadata};
-    } catch(e) {
-        console.log('Error', e);
-        return {};
+        return swapsResult.map((row) => {
+            const match = swapStoragePattern.exec(row['value']);
+
+            return {
+                swap_id: row['key'],
+                issuer: conseiljs.TezosMessageUtils.readAddress(match[1]),
+                objkt_amount: match[2],
+                xtz_per_objkt: match[3],
+            };
+        });
+    } catch(error) {
+        console.log(`failed to process swaps for ${objectId} with ${error}`);
+        return null;
     }
-}
+};
 
 exports.handler = async(event) => {
     try {
-        const objkt = await getObjkt(event.pathParameters.objktId);
+        const swaps = await getSwapsByObjktId(event.pathParameters.objktId);
         return {
             statusCode: 200,
-            body: JSON.stringify(objkt),
+            body: JSON.stringify(swaps),
             headers: {
                 'Access-Control-Allow-Origin': '*',
                 'Content-Type': 'application/json',

@@ -16,19 +16,22 @@ x-api-key: ZIMcGcGQ2s85G8ZTlwu3w5BvIJoowvt9aTlS9V96
 
 ###
 
-GET {{url}}/objkts/63087
+GET {{url}}/objkts/59894
 Accept: application/json
 x-api-key: ZIMcGcGQ2s85G8ZTlwu3w5BvIJoowvt9aTlS9V96
 
 ###
 
-GET {{url}}/collectors/63087
+GET {{url}}/objkts/59894/swaps
 Accept: application/json
 x-api-key: ZIMcGcGQ2s85G8ZTlwu3w5BvIJoowvt9aTlS9V96
 
 ###
 
-GET https://api.better-call.dev/v1/contract/mainnet/KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton/tokens/holders?token_id=63087
+GET {{url}}/collectors/44295
 Accept: application/json
+Cache-Control: no-cache
+Access-Control-Max-Age: 0
+x-api-key: ZIMcGcGQ2s85G8ZTlwu3w5BvIJoowvt9aTlS9V96
 
 ###

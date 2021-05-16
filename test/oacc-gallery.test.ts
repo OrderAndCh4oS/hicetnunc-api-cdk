@@ -1,4 +1,4 @@
-import { expect as expectCDK, matchTemplate, MatchStyle } from '@aws-cdk/assert';
+import {expect as expectCDK, MatchStyle, matchTemplate} from '@aws-cdk/assert';
 import * as cdk from '@aws-cdk/core';
 import {OaccGalleryStack} from "../lib/main-stack";
 
@@ -12,6 +12,6 @@ test('Empty Stack', () => {
     });
     // THEN
     expectCDK(stack).to(matchTemplate({
-      "Resources": {}
+        "Resources": {}
     }, MatchStyle.EXACT))
 });

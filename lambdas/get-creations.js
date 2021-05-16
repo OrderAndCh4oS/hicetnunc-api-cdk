@@ -1,7 +1,6 @@
 // https://cryptonomic.github.io/ConseilJS/#/?id=metadata-discovery-functions
 // https://github.com/hicetnunc2000/hicetnunc-api/blob/7a87b206d7714cc054fc3497bae68504e5f353d6/lib/conseil.js#L719
 
-
 const conseiljs = require('conseiljs');
 const {
     ConseilOperator,
@@ -13,9 +12,12 @@ const {
 } = conseiljs;
 const log = require('loglevel');
 const fetch = require('node-fetch');
+const axios = require('axios');
 
 const nautilusApiKey = process.env.NAUTILUS_API_KEY;
 if(!nautilusApiKey) throw new Error('Missing NAUTILUS_API_KEY environment variable');
+
+const burnAddress = 'tz1burnburnburnburnburnburnburjAYjjX'
 
 const logger = log.getLogger('conseiljs');
 logger.setLevel('error', false);
@@ -183,23 +185,76 @@ const getCreationsForAddress = async(address) => {
         .sort((a, b) => parseInt(b.objectId) - parseInt(a.objectId));
 };
 
-exports.handler = async (event) => {
+const filteredBurnedCreations = async creations => {
+    const validCreations = []
+
+    await Promise.all(
+        creations.map(async (c) => {
+            const ownerData = await getObjktOwners(c)
+
+            Object.assign(c, ownerData)
+
+            const burnAddrCount = c.owners[burnAddress] && parseInt(c.owners[burnAddress])
+            const allIssuesBurned = burnAddrCount && burnAddrCount === c.total
+
+            if (!allIssuesBurned) {
+                delete c.owners
+                validCreations.push(c);
+            }
+        })
+    )
+
+    return validCreations
+};
+
+async function getObjktOwners(objkt) {
+    const owners = (
+        await axios.get(
+            'https://api.better-call.dev/v1/contract/mainnet/KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton/tokens/holders?token_id=' +
+            objkt.objectId
+        )
+    ).data
+
+    const ownerCountList = Object.values(owners)
+
+    let total = 0
+
+    if (ownerCountList.length) {
+        total = ownerCountList.reduce((acc, i) => {
+            const owned = parseInt(i)
+
+            return owned > 0 ? acc + owned : acc
+        }, 0)
+    }
+
+    return {
+        total,
+        owners,
+    }
+}
+
+exports.handler = async(event) => {
     try {
-        console.log('address', event.pathParameters.address)
+        console.log('address', event.pathParameters.address);
         const creations = await getCreationsForAddress(event.pathParameters.address);
+        // const filteredCreations = await filteredBurnedCreations(creations);
         return {
             statusCode: 200,
             body: JSON.stringify(creations),
             headers: {
                 'Access-Control-Allow-Origin': '*',
-                'Content-Type': 'application/json'
-            }
-        }
+                'Content-Type': 'application/json',
+            },
+        };
     } catch(e) {
         console.log('Error', e);
         return {
             statusCode: 500,
-            body: JSON.stringify({error: 'Unhandled error'})
-        }
+            body: JSON.stringify({error: 'Unhandled error'}),
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Content-Type': 'application/json',
+            },
+        };
     }
-}
+};

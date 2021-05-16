@@ -19,6 +19,7 @@ export class HicEtNuncApiStack extends Stack {
                 cachingEnabled: true,
                 cacheTtl: Duration.minutes(30),
                 cacheClusterEnabled: true,
+                metricsEnabled: true,
             },
             endpointConfiguration: {
                 types: [EndpointType.EDGE]
@@ -30,8 +31,8 @@ export class HicEtNuncApiStack extends Stack {
                 name: "orderandchaos",
                 usagePlan: {
                     name: "orderandchaos-usage-plan",
-                    throttleRateLimit: 200,
-                    throttleBurstLimit: 500,
+                    throttleRateLimit: 500,
+                    throttleBurstLimit: 1000,
                     quotaLimit: 100000,
                     period: Period.DAY
                 },
@@ -41,8 +42,8 @@ export class HicEtNuncApiStack extends Stack {
                 name: "flygohr",
                 usagePlan: {
                     name: "flygohr-usage-plan",
-                    throttleRateLimit: 200,
-                    throttleBurstLimit: 500,
+                    throttleRateLimit: 500,
+                    throttleBurstLimit: 1000,
                     quotaLimit: 100000,
                     period: Period.DAY
                 },
@@ -55,7 +56,7 @@ export class HicEtNuncApiStack extends Stack {
                 defaultCorsPreflightOptions: {
                     allowOrigins: Cors.ALL_ORIGINS,
                     allowMethods: Cors.ALL_METHODS
-                }
+                },
             });
 
             api.addUsagePlan(`${user.name}-usage-plan`, {
@@ -79,7 +80,7 @@ export class HicEtNuncApiStack extends Stack {
         const creations = new Function(this, 'Creations', {
             runtime: Runtime.NODEJS_14_X,
             handler: 'get-creations.handler',
-            timeout: Duration.seconds(15),
+            timeout: Duration.seconds(30),
             code: Code.fromAsset('./lambdas'),
             environment: {
                 NAUTILUS_API_KEY: props.nautilusApiKey
@@ -97,6 +98,15 @@ export class HicEtNuncApiStack extends Stack {
         const objkts = new Function(this, 'Objkts', {
             runtime: Runtime.NODEJS_14_X,
             handler: 'get-objkt.handler',
+            timeout: Duration.seconds(8),
+            code: Code.fromAsset('./lambdas'),
+            environment: {
+                NAUTILUS_API_KEY: props.nautilusApiKey
+            },
+        });
+        const objktSwaps = new Function(this, 'ObjktSwaps', {
+            runtime: Runtime.NODEJS_14_X,
+            handler: 'get-swaps-by-objkt-id.handler',
             timeout: Duration.seconds(8),
             code: Code.fromAsset('./lambdas'),
             environment: {
@@ -147,6 +157,13 @@ export class HicEtNuncApiStack extends Stack {
             cacheKeyParameters: ['method.request.path.objktId']
         })
 
+        const objktSwapsIntegration = new LambdaIntegration(objktSwaps, {
+            requestParameters: {
+                'integration.request.path.objktId': 'method.request.path.objktId'
+            },
+            cacheKeyParameters: ['method.request.path.objktId']
+        })
+
         const collectorsIntegration = new LambdaIntegration(collectors, {
             requestParameters: {
                 'integration.request.path.objktId': 'method.request.path.objktId'
@@ -174,14 +191,23 @@ export class HicEtNuncApiStack extends Stack {
             .addMethod('GET', swapsIntegration, {
                 requestParameters: {'method.request.path.address': true},
                 apiKeyRequired: true
-            })
-        api.root
-            .addResource('objkts')
-            .addResource('{objktId}')
-            .addMethod('GET', objktIntegration, {
-                requestParameters: {'method.request.path.objktId': true},
-                apiKeyRequired: true
-            })
+            });
+
+        const objktsResource = api.root.addResource('objkts')
+        const objktDetailResource = objktsResource.addResource('{objktId}');
+
+        objktDetailResource.addMethod('GET', objktIntegration, {
+            requestParameters: {'method.request.path.objktId': true},
+            apiKeyRequired: true
+        });
+
+        objktDetailResource
+            .addResource('swaps')
+            .addMethod('GET', objktSwapsIntegration, {
+            requestParameters: {'method.request.path.objktId': true},
+            apiKeyRequired: true
+        });
+
         api.root
             .addResource('collectors')
             .addResource('{objktId}')
